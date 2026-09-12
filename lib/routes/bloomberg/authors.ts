@@ -1,9 +1,12 @@
-import { Route, ViewType } from '@/types';
 import { load } from 'cheerio';
+import pMap from 'p-map';
+
+import type { Data, Route } from '@/types';
+import { ViewType } from '@/types';
 import ofetch from '@/utils/ofetch';
 import rssParser from '@/utils/rss-parser';
+
 import { parseArticle } from './utils';
-import pMap from 'p-map';
 
 const parseAuthorNewsList = async (slug) => {
     const baseURL = `https://www.bloomberg.com/authors/${slug}`;
@@ -16,20 +19,20 @@ const parseAuthorNewsList = async (slug) => {
     const $ = load(resp.html);
     const articles = $('article.story-list-story');
     return articles.toArray().map((item) => {
-        item = $(item);
-        const headline = item.find('a.story-list-story__info__headline-link');
+        const $item = $(item);
+        const headline = $item.find('a.story-list-story__info__headline-link');
         return {
             title: headline.text(),
-            pubDate: item.attr('data-updated-at'),
-            guid: `bloomberg:${item.attr('data-id')}`,
-            link: new URL(headline.attr('href'), baseURL).href,
+            pubDate: $item.attr('data-updated-at'),
+            guid: `bloomberg:${$item.attr('data-id')}`,
+            link: new URL(headline.attr('href')!, baseURL).href,
         };
     });
 };
 
 export const route: Route = {
     path: '/authors/:id/:slug/:source?',
-    categories: ['finance', 'popular'],
+    categories: ['finance'],
     view: ViewType.Articles,
     example: '/bloomberg/authors/ARbTQlRLRjE/matthew-s-levine',
     parameters: { id: 'Author ID, can be found in URL', slug: 'Author Slug, can be found in URL', source: 'Data source, either `api` or `rss`,`api` by default' },
@@ -52,11 +55,11 @@ export const route: Route = {
     handler,
 };
 
-async function handler(ctx) {
+async function handler(ctx): Promise<Data> {
     const { id, slug, source } = ctx.req.param();
     const link = `https://www.bloomberg.com/authors/${id}/${slug}`;
 
-    let list = [];
+    let list: any[] = [];
     if (!source || source === 'api') {
         list = await parseAuthorNewsList(`${id}/${slug}`);
     }

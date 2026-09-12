@@ -1,11 +1,12 @@
-import { Route } from '@/types';
+import { load } from 'cheerio';
+
+import type { Route } from '@/types';
 import cache from '@/utils/cache';
 import ofetch from '@/utils/ofetch';
-import { load } from 'cheerio';
 
 export const route: Route = {
     path: '/series',
-    categories: ['new-media', 'popular'],
+    categories: ['new-media'],
     example: '/sspai/series',
     parameters: {},
     features: {
@@ -25,7 +26,7 @@ export const route: Route = {
     maintainers: ['HenryQW'],
     handler,
     url: 'sspai.com/series',
-    description: `> 少数派专栏需要付费订阅，RSS 仅做更新提醒，不含付费内容.`,
+    description: '> 少数派专栏需要付费订阅，RSS 仅做更新提醒，不含付费内容.',
 };
 
 async function handler() {

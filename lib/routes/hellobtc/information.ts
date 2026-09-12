@@ -1,7 +1,8 @@
-import { Route } from '@/types';
+import { load } from 'cheerio';
+
+import type { DataItem, Route } from '@/types';
 import cache from '@/utils/cache';
 import got from '@/utils/got';
-import { load } from 'cheerio';
 import { parseDate } from '@/utils/parse-date';
 import timezone from '@/utils/timezone';
 
@@ -19,7 +20,7 @@ const titleMap = {
 
 export const route: Route = {
     path: '/information/:channel?',
-    categories: ['new-media', 'popular'],
+    categories: ['new-media'],
     example: '/hellobtc/information/latest',
     parameters: { channel: '类型，可填 `latest` 和 `application` 及最新和应用，默认为最新' },
     features: {
@@ -44,19 +45,19 @@ async function handler(ctx) {
     const list = $(channelSelector[channel])
         .find('div.new_item')
         .toArray()
-        .map((item) => ({
+        .map((item): DataItem => ({
             title: $(item).find('h2').text(),
             link: $(item).find('a').attr('href'),
         }));
 
     const items = await Promise.all(
         list.map((item) =>
-            cache.tryGet(item.link, async () => {
+            cache.tryGet(item.link!, async () => {
                 const detailResponse = await got(item.link);
                 const content = load(detailResponse.data);
 
                 item.description = content('#nr').html();
-                item.pubDate = timezone(parseDate(content('span.date').text(), 'YYYY-MM-DD HH:mm:ss'), +8);
+                item.pubDate = timezone(parseDate(content('span.date').text(), 'YYYY-MM-DD HH:mm:ss'), 8);
 
                 return item;
             })
